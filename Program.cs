@@ -1,7 +1,9 @@
 using ExpenseTrackerAPI.Data;
+using ExpenseTrackerAPI.Interfaces;
+using ExpenseTrackerAPI.Repositories;
 using ExpenseTrackerAPI.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -23,7 +25,19 @@ namespace ExpenseTrackerAPI
             builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.AddScoped<TokenService>();
-            builder.Services.AddScoped<TransactionService>(); 
+            builder.Services.AddScoped<TransactionService>();
+            builder.Services.AddScoped<TokenService>();
+
+            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+            builder.Services.AddScoped<AccountService>();
+
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<CategoryService>();
+
+            builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+            builder.Services.AddScoped<TransactionService>();
+
+            
             builder.Services.AddHttpContextAccessor(); 
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
