@@ -27,7 +27,7 @@ namespace ExpenseTrackerAPI.Controllers
         public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions()
         {
             // The controller just calls the service to get the data.
-            var transactions = await _transactionService.GetTransactions();
+            var transactions = await _transactionService.GetTransactionsAsync();
             return Ok(transactions);
         }
 
@@ -40,7 +40,7 @@ namespace ExpenseTrackerAPI.Controllers
             }
 
             // The controller calls the service to create the transaction.
-            var createdTransaction = await _transactionService.CreateTransaction(transactionDto);
+            var createdTransaction = await _transactionService.CreateTransactionAsync(transactionDto);
 
             // We can improve this response later, but Ok is fine for now.
             return Ok(createdTransaction);

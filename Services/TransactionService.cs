@@ -1,5 +1,6 @@
 ﻿using ExpenseTrackerAPI.Data;
 using ExpenseTrackerAPI.DTOs;
+using ExpenseTrackerAPI.Interfaces;
 using ExpenseTrackerAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -8,12 +9,12 @@ namespace ExpenseTrackerAPI.Services
 {
     public class TransactionService
     {
-        private readonly AppDbContext _context;
+        private readonly ITransactionRepository _transactionRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TransactionService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
+        public TransactionService(ITransactionRepository transactionRepository, IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _transactionRepository = transactionRepository;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -27,76 +28,55 @@ namespace ExpenseTrackerAPI.Services
             return int.Parse(userId);
         }
 
-        public async Task<IEnumerable<TransactionDto>> GetTransactions()
+        public async Task<IEnumerable<TransactionDto>> GetTransactionsAsync()
         {
             var userId = GetCurrentUserId();
-            return await _context.Transactions
-                .Where(t => t.UserId == userId)
-                .Select(t => new TransactionDto // Map entity to DTO
-                {
-                    TransactionId = t.TransactionId,
-                    Type = t.Type,
-                    Amount = t.Amount,
-                    Date = t.Date,
-                    Note = t.Note,
-                    CategoryName = t.Category.Name,
-                    AccountName = t.Account.Name,
-                    FromAccountName = t.FromAccount.Name,
-                    ToAccountName = t.ToAccount.Name
-                })
-                .OrderByDescending(t => t.Date)
-                .ToListAsync();
+            var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId);
+
+            return transactions.Select(t => new TransactionDto
+            {
+                TransactionId = t.TransactionId,
+                Type = t.Type,
+                Amount = t.Amount,
+                Date = t.Date,
+                Note = t.Note,
+                CategoryName = t.Category?.Name,
+                AccountName = t.Account?.Name,
+                FromAccountName = t.FromAccount?.Name,
+                ToAccountName = t.ToAccount?.Name
+            });
         }
 
-
-        public async Task<Transaction> CreateTransaction(CreateTransactionDto transactionDto)
+        public async Task<Transaction> CreateTransactionAsync(CreateTransactionDto transactionDto)
         {
             var userId = GetCurrentUserId();
-
             var transaction = new Transaction
             {
                 UserId = userId,
                 Type = transactionDto.Type,
                 Amount = transactionDto.Amount,
                 Date = transactionDto.Date,
-                Note = transactionDto.Note
+                Note = transactionDto.Note,
+                AccountId = transactionDto.AccountId,
+                CategoryId = transactionDto.CategoryId,
+                FromAccountId = transactionDto.FromAccountId,
+                ToAccountId = transactionDto.ToAccountId
             };
 
-            if (transaction.Type == TransactionType.Expense || transaction.Type == TransactionType.Income)
-            {
-                transaction.AccountId = transactionDto.AccountId;
-                transaction.CategoryId = transactionDto.CategoryId;
-            }
-            else // Transfer
-            {
-                transaction.FromAccountId = transactionDto.FromAccountId;
-                transaction.ToAccountId = transactionDto.ToAccountId;
-            }
-
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
-
-            return transaction;
+            return await _transactionRepository.CreateTransactionAsync(transaction);
         }
 
         public async Task<bool> DeleteTransactionAsync(int transactionId)
         {
             var userId = GetCurrentUserId();
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
+            var transaction = await _transactionRepository.GetTransactionByIdAndUserIdAsync(transactionId, userId);
 
             if (transaction == null)
             {
-                return false; // Transaction not found or doesn't belong to the user
+                return false;
             }
 
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _transactionRepository.DeleteTransactionAsync(transaction);
         }
-
-        // We can add GetById and Update methods here following the same pattern.
-
-        
     }
 }
