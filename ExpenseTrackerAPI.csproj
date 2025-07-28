@@ -22,6 +22,7 @@
   <ItemGroup>
     <Folder Include="Mappings\" />
     <Folder Include="Middleware\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

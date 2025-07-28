@@ -12,7 +12,6 @@ namespace ExpenseTrackerAPI.Data
 
         // DbSets represent the tables in our database
         public DbSet<User> Users { get; set; }
-        public DbSet<Account> Accounts { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
@@ -22,35 +21,16 @@ namespace ExpenseTrackerAPI.Data
 
             // Configure one-to-many relationships
             modelBuilder.Entity<User>()
-                .HasMany(u => u.Accounts)
-                .WithOne(a => a.User)
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade); // If a user is deleted, their accounts are also deleted.
-
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Categories)
-                .WithOne(c => c.User)
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                 .HasMany(u => u.Categories)
+                 .WithOne(c => c.User)
+                 .HasForeignKey(c => c.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Transactions)
                 .WithOne(t => t.User)
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure relationships for Transactions
-            modelBuilder.Entity<Transaction>()
-                .HasOne(t => t.FromAccount)
-                .WithMany()
-                .HasForeignKey(t => t.FromAccountId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent deleting an account if it's in a transaction
-
-            modelBuilder.Entity<Transaction>()
-                .HasOne(t => t.ToAccount)
-                .WithMany()
-                .HasForeignKey(t => t.ToAccountId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

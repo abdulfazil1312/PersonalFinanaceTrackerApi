@@ -19,10 +19,9 @@ namespace ExpenseTrackerAPI.DTOs
 
         // For Expense/Income
         public int? CategoryId { get; set; }
-        public int? AccountId { get; set; }
 
         // For Transfers
-        public int? FromAccountId { get; set; }
-        public int? ToAccountId { get; set; }
+        public string? TransferFrom { get; set; }
+        public string? TransferTo { get; set; }
     }
 }

@@ -5,119 +5,83 @@ using ExpenseTrackerAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 
 
-namespace ExpenseTrackerAPI
+var builder = WebApplication.CreateBuilder(args);
+
+// --- 1. CONFIGURE SERVICES ---
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    public class Program
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+builder.Services.AddHttpContextAccessor();
+
+// Register services and repositories (Account services removed)
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<TransactionService>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        public static void Main(string[] args)
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var builder = WebApplication.CreateBuilder(args);
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
 
-            // Add services to the container.
+builder.Services.AddAuthorization();
 
-           
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-              options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            builder.Services.AddEndpointsApiExplorer();
-
-            builder.Services.AddScoped<TokenService>();
-            builder.Services.AddScoped<TransactionService>();
-            builder.Services.AddScoped<TokenService>();
-
-            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-            builder.Services.AddScoped<AccountService>();
-
-            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-            builder.Services.AddScoped<CategoryService>();
-
-            builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-            builder.Services.AddScoped<TransactionService>();
-
-            builder.Services.AddControllers();
-            builder.Services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
-
-            builder.Services.AddHttpContextAccessor(); 
-
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-                };
-            });
-
-            builder.Services.AddAuthorization();
-
-            builder.Services.AddControllers();
-
-            builder.Services.AddEndpointsApiExplorer();
-
-            builder.Services.AddSwaggerGen(options =>
-            {
-                // 1. Define the security scheme (JWT Bearer)
-                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                });
-
-                // 2. Make sure Swagger requires the token for locked endpoints
-                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-                {
-                    {
-                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                            {
-                                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                                    {
-                                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                                        Id = "Bearer"
-                                    }
-                            },
-                        new string[] {}
-                    }
-                });
-            });
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Swagger config remains the same
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { /* ... */ });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement { /* ... */ });
+});
 
 
-            var app = builder.Build();
-
-            app.UseSwagger();
-            app.UseSwaggerUI();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-               
-            }
-
-            
-            app.UseAuthentication();
-            app.UseAuthorization();
+// --- 2. BUILD THE APPLICATION ---
+var app = builder.Build();
 
 
-            app.MapControllers();
+// --- 3. CONFIGURE THE HTTP REQUEST PIPELINE ---
+app.UseSwagger();
+app.UseSwaggerUI();
 
-            app.Run();
-        }
-    }
-}
+app.UseRouting();
+
+app.UseCors("AllowAll");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

@@ -16,16 +16,13 @@ namespace ExpenseTrackerAPI.Repositories
         public async Task<IEnumerable<Transaction>> GetTransactionsByUserIdAsync(int userId)
         {
             return await _context.Transactions
-                .Include(t => t.Category) // Include related data for mapping
-                .Include(t => t.Account)
-                .Include(t => t.FromAccount)
-                .Include(t => t.ToAccount)
+                .Include(t => t.Category) // We still need the category name
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.Date)
                 .ToListAsync();
         }
 
-        public async Task<Transaction> GetTransactionByIdAndUserIdAsync(int transactionId, int userId)
+        public async Task<Transaction?> GetTransactionByIdAndUserIdAsync(int transactionId, int userId)
         {
             return await _context.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);

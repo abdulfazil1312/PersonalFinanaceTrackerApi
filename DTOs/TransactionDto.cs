@@ -10,8 +10,7 @@ namespace ExpenseTrackerAPI.DTOs
         public DateTime Date { get; set; }
         public string? Note { get; set; }
         public string? CategoryName { get; set; }
-        public string? AccountName { get; set; }
-        public string? FromAccountName { get; set; }
-        public string? ToAccountName { get; set; }
+        public string? TransferFrom { get; set; }
+        public string? TransferTo { get; set; }
     }
 }

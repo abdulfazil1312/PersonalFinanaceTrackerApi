@@ -24,22 +24,17 @@ namespace ExpenseTrackerAPI.Models
 
         // Foreign Key to the User
         public int UserId { get; set; }
-        public User User { get; set; } // Navigation property
+        public User User { get; set; }
 
         // --- Fields for Expense/Income ---
-        // Nullable because they don't apply to Transfers
         public int? CategoryId { get; set; }
-        public Category? Category { get; set; } // Navigation property
+        public Category? Category { get; set; }
 
-        public int? AccountId { get; set; } // The account that was affected
-        public Account? Account { get; set; } // Navigation property
+        // --- NEW Fields for Transfers ---
+        [MaxLength(100)]
+        public string? TransferFrom { get; set; }
 
-        // --- Fields for Transfers ---
-        // Nullable because they only apply to Transfers
-        public int? FromAccountId { get; set; }
-        public Account? FromAccount { get; set; } // Navigation property
-
-        public int? ToAccountId { get; set; }
-        public Account? ToAccount { get; set; } // Navigation property
+        [MaxLength(100)]
+        public string? TransferTo { get; set; }
     }
 }

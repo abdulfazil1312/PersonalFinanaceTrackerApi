@@ -30,9 +30,6 @@ namespace ExpenseTrackerAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
 
-                    b.Property<int?>("AccountId")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)");
 
@@ -42,15 +39,17 @@ namespace ExpenseTrackerAPI.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("FromAccountId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("ToAccountId")
-                        .HasColumnType("int");
+                    b.Property<string>("TransferFrom")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TransferTo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -60,13 +59,7 @@ namespace ExpenseTrackerAPI.Migrations
 
                     b.HasKey("TransactionId");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("FromAccountId");
-
-                    b.HasIndex("ToAccountId");
 
                     b.HasIndex("UserId");
 
@@ -103,42 +96,6 @@ namespace ExpenseTrackerAPI.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ExpenseTrackerApi.Models.Account", b =>
-                {
-                    b.Property<int>("AccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<decimal>("InitialBalance")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("AccountId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Accounts");
-                });
-
             modelBuilder.Entity("ExpenseTrackerApi.Models.Category", b =>
                 {
                     b.Property<int>("CategoryId")
@@ -167,23 +124,9 @@ namespace ExpenseTrackerAPI.Migrations
 
             modelBuilder.Entity("ExpenseTrackerAPI.Models.Transaction", b =>
                 {
-                    b.HasOne("ExpenseTrackerApi.Models.Account", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId");
-
                     b.HasOne("ExpenseTrackerApi.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
-
-                    b.HasOne("ExpenseTrackerApi.Models.Account", "FromAccount")
-                        .WithMany()
-                        .HasForeignKey("FromAccountId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ExpenseTrackerApi.Models.Account", "ToAccount")
-                        .WithMany()
-                        .HasForeignKey("ToAccountId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ExpenseTrackerAPI.Models.User", "User")
                         .WithMany("Transactions")
@@ -191,24 +134,7 @@ namespace ExpenseTrackerAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Account");
-
                     b.Navigation("Category");
-
-                    b.Navigation("FromAccount");
-
-                    b.Navigation("ToAccount");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ExpenseTrackerApi.Models.Account", b =>
-                {
-                    b.HasOne("ExpenseTrackerAPI.Models.User", "User")
-                        .WithMany("Accounts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -226,8 +152,6 @@ namespace ExpenseTrackerAPI.Migrations
 
             modelBuilder.Entity("ExpenseTrackerAPI.Models.User", b =>
                 {
-                    b.Navigation("Accounts");
-
                     b.Navigation("Categories");
 
                     b.Navigation("Transactions");

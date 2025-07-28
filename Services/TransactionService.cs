@@ -41,9 +41,8 @@ namespace ExpenseTrackerAPI.Services
                 Date = t.Date,
                 Note = t.Note,
                 CategoryName = t.Category?.Name,
-                AccountName = t.Account?.Name,
-                FromAccountName = t.FromAccount?.Name,
-                ToAccountName = t.ToAccount?.Name
+                TransferFrom = t.TransferFrom,
+                TransferTo = t.TransferTo
             });
         }
 
@@ -57,10 +56,9 @@ namespace ExpenseTrackerAPI.Services
                 Amount = transactionDto.Amount,
                 Date = transactionDto.Date,
                 Note = transactionDto.Note,
-                AccountId = transactionDto.AccountId,
                 CategoryId = transactionDto.CategoryId,
-                FromAccountId = transactionDto.FromAccountId,
-                ToAccountId = transactionDto.ToAccountId
+                TransferFrom = transactionDto.TransferFrom,
+                TransferTo = transactionDto.TransferTo
             };
 
             return await _transactionRepository.CreateTransactionAsync(transaction);
